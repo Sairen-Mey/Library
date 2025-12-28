@@ -1,10 +1,17 @@
+from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path("library.db")
+DB_PATH = Path("../data/library.db")
+
+def get_conn() -> sqlite3.Connection:
+    DB_PATH.parent.mkdir(parents=True,exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def init_db() -> None:
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_conn() as conn:
         conn.execute("""
         CREATE TABLE IF NOT EXIST members (
             member_id TEXT PRIMARY KEY,
@@ -16,16 +23,31 @@ def init_db() -> None:
         conn.execute("""
         CREATE TABLE IF NOT EXIST items (
             item_id TEXT PRIMARY KEY,
+            type TEXT NOT NULL,
             title TEXT NOT NULL,
             is_available INTEGER NOT NULL DEFAULT 1,
             author TEXT, 
             issue TEXT,
-            drm INTEGER 
+            drm INTEGER
         );
         """)
 
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS loans (
+            loan_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            member_id TEXT NOT NULL,
+            item_id TEXT NOT NULL,
+            checkout_at TEXT NOT NULL,
+            due_date TEXT NOT NULL,
+            returned_at TEXT,
+            FOREIGN KEY(member_id) REFERENCES members(member_id),
+            FOREIGN KEY(item_id) REFERENCES items(item_id)
+        );
+        """)
+        conn.commit()
+
 def seed_db():
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_conn() as conn:
         conn.execute("DELETE FROM members;")
         conn.execute("DELETE FROM items;")
 
@@ -51,6 +73,7 @@ def seed_db():
         )
 
         conn.commit()
+
 
 if __name__ == "__main__":
     init_db()

@@ -1,10 +1,10 @@
-from flask import Flask, jsonify, request, abort
-from library import Library
-from models import Book, Magazine, EBook, Member
+from flask import Flask, jsonify, abort
+from library_service.library import Library
+from library_service.models import Book, Magazine, EBook, Member
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path("library.db")
+DB_PATH = Path("data/library.db")
 
 app = Flask(__name__)
 
@@ -37,6 +37,13 @@ def load_from_db():
                 lib.add_item(Magazine(row["item_id"], row["title"], row["issue"] or "unknown"))
             elif t == "ebook":
                 lib.add_item(EBook(row["item_id"], row["title"], bool(row["drm"])))
+
+def get_member_or_404(member_id:str) -> Member:
+    member = lib.get_member(member_id)
+    if member is None:
+        return abort(404)
+    return member
+
 
 
 @app.get("/members/")

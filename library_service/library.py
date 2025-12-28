@@ -1,11 +1,21 @@
-from models import LibraryItem, Member
-from typing import Optional
+from __future__ import annotations
+
 from datetime import datetime
+from typing import List, Optional
+
+from .models import Book, Magazine, EBook, LibraryItem, Member
+from . import services as ser
 
 class Library:
-    def __init__(self):
-        self._items: dict[str, LibraryItem] = {}
-        self._members: dict[str, Member] = {}
+    def list_members(self) -> List[Member]:
+        rows = ser.db_list_members()
+        return [Member(r[0],r[1],bool(r[2])) for r in rows]
+
+    def list_items(self, item_type:str) -> List[LibraryItem]:
+        rows = ser.db_list_items(item_type)
+        return [LibraryItem(r[0]) for r in rows]
+
+
 
     def add_item(self, item: LibraryItem) -> None:
         if item._id in self._items:
@@ -69,3 +79,14 @@ class Library:
             if item.due_date is not None and item.due_date < now and not item.is_available:
                 result.append(item)
         return result
+
+    @staticmethod
+    def _row_to_item(row) -> LibraryItem:
+        t = (row["type"] or "").lower()
+        if t == "book":
+            return Book(row["item_id"], row["title"], row["author"] or "Unknown")
+        elif t == "magazine":
+            return Magazine(row["item_id"], row["title"], row["issue"] or "Unknown")
+        elif t == "ebook":
+            return EBook(row["item_id"], row["title"], bool(row["drm"]))
+        raise ValueError(f"Unknown item type in DB: {row['type']}")
