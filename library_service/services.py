@@ -40,12 +40,12 @@ def db_get_item(item_id:str):
             "SELECT item_id, title, is_available, author, issue, drm FROM items WHERE item_id = ?;",
             (item_id,),
         ).fetchall()
-
-def db_create_item(item_id:str, title:str, is_available:bool, author:str, issue:str, drm:bool):
+"""    """
+def db_create_item(item_id:str, type:str, title:str, is_available:bool, author = None, issue = None, drm = None):
     with get_conn() as conn:
         conn.execute(
-            "INSERT INTO items(item_id, title, is_available, author, issue, drm) VALUES (?,?,?,?,?,?);",
-            (item_id,title,1 if is_available else 0,author,issue,drm)
+            "INSERT INTO items(item_id, type, title, is_available, author, issue, drm) VALUES (?,?,?,?,?,?);",
+            (item_id, type.lower(), title, 1 if is_available else 0,author,issue,drm)
         )
         conn.commit()
 

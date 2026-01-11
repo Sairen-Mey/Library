@@ -1,10 +1,12 @@
 from __future__ import annotations
 import sqlite3
 from pathlib import Path
+import os
 
 DB_PATH = Path("../data/library.db")
 
 def get_conn() -> sqlite3.Connection:
+    print("DB FILE:", os.path.abspath(DB_PATH))
     DB_PATH.parent.mkdir(parents=True,exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -13,7 +15,7 @@ def get_conn() -> sqlite3.Connection:
 def init_db() -> None:
     with get_conn() as conn:
         conn.execute("""
-        CREATE TABLE IF NOT EXIST members (
+        CREATE TABLE IF NOT EXISTS members (
             member_id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             active INTEGER NOT NULL DEFAULT 1
@@ -21,7 +23,7 @@ def init_db() -> None:
         """)
 
         conn.execute("""
-        CREATE TABLE IF NOT EXIST items (
+        CREATE TABLE IF NOT EXISTS items (
             item_id TEXT PRIMARY KEY,
             type TEXT NOT NULL,
             title TEXT NOT NULL,
